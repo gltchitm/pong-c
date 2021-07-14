@@ -1,9 +1,7 @@
-#pragma once
-
 const int SCOREBOARD_PAD_TOP = 28;
 
 void draw_score(int current_score, int x, int y, SDL_Renderer* renderer) {
-    TTF_Font* font = TTF_OpenFont("PressStart2P-Regular.ttf", 48);
+    TTF_Font* font = TTF_OpenFont("../vendor/font/font.ttf", 48);
     SDL_Color white = {255, 255, 255};
     char score[8];
     sprintf(score, "%d", current_score);

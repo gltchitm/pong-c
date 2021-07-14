@@ -1,5 +1,3 @@
-#pragma once
-
 const int PADDING_FROM_SIDE = 15;
 const int PADDLE_WIDTH = 15;
 const int PADDLE_HEIGHT = 200;

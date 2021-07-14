@@ -1,5 +1,3 @@
-#pragma once
-
 const int BALL_RADIUS = 13;
 
 struct Ball {
