@@ -1,5 +1,5 @@
 void draw_centered_message(int width, int font_size, int y, char *message, SDL_Renderer *renderer) {
-    TTF_Font *font = TTF_OpenFont("../vendor/font/font.ttf", font_size);
+    TTF_Font *font = TTF_OpenFont("./vendor/font/font.ttf", font_size);
     SDL_Color white = {195, 195, 195};
     SDL_Surface *pong_message = TTF_RenderText_Solid(font, message, white);
     SDL_Texture *pong_surface = SDL_CreateTextureFromSurface(renderer, pong_message);
