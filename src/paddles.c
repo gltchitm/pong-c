@@ -9,7 +9,7 @@ struct Paddles {
     int right_paddle_proposed;
 };
 
-void draw_paddle(int x, int y, SDL_Renderer* renderer) {
+void draw_paddle(int x, int y, SDL_Renderer *renderer) {
     SDL_Rect rect;
     rect.x = x;
     rect.y = y;
@@ -20,7 +20,7 @@ void draw_paddle(int x, int y, SDL_Renderer* renderer) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 }
 
-void draw_paddles(struct Paddles* paddles, int width, SDL_Renderer* renderer) {
+void draw_paddles(struct Paddles *paddles, int width, SDL_Renderer *renderer) {
     draw_paddle(PADDING_FROM_SIDE, paddles->left_paddle, renderer);
     draw_paddle(width - PADDLE_WIDTH - PADDING_FROM_SIDE, paddles->right_paddle, renderer);
 }

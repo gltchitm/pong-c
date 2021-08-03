@@ -20,13 +20,13 @@ const int SECOND = 1000;
 const int SPEED = 300;
 const int BALL_SPEED = 165;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         printf("Could not init SDL: %s\n", SDL_GetError());
         exit(1);
     }
 
-    SDL_Window* window = SDL_CreateWindow(
+    SDL_Window *window = SDL_CreateWindow(
         "Pong",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     ball.y = WINDOW_HEIGHT / 2 - BALL_RADIUS / 2;
 
     Uint32 render_flags = SDL_RENDERER_ACCELERATED;
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, render_flags);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, render_flags);
 
     int close = 0;
     int left_score = 0;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
                             }
                             break;
                         }
-                        const Uint8* keyboard_state = SDL_GetKeyboardState(NULL);
+                        const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
                         if (event.key.keysym.scancode == SDL_SCANCODE_W) {
                             paddles.left_paddle_proposed = -SPEED / 30;
                         } else if (event.key.keysym.scancode == SDL_SCANCODE_S) {
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
                         if (!game_active) {
                             break;
                         }
-                        const Uint8* keyboard_state = SDL_GetKeyboardState(NULL);
+                        const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
                         switch (event.key.keysym.scancode) {
                             case SDL_SCANCODE_W:
                             case SDL_SCANCODE_S:

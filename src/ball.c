@@ -7,7 +7,7 @@ struct Ball {
     int y_speed;
 };
 
-void draw_ball(struct Ball* ball, SDL_Renderer* renderer) {
+void draw_ball(struct Ball *ball, SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     for (int w = 0; w < BALL_RADIUS * 2; w++) {
         for (int h = 0; h < BALL_RADIUS * 2; h++) {
