@@ -22,7 +22,7 @@ const int BALL_SPEED = 165;
 
 int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        printf("Could not init SDL: %s\n", SDL_GetError());
+        fprintf(stderr, "Could not init SDL: %s\n", SDL_GetError());
         exit(1);
     }
 
