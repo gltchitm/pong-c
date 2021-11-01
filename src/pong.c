@@ -1,17 +1,9 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "scoreboard.h"
-#include "welcome.h"
-#include "paddles.h"
-#include "ball.h"
+#include "scoreboard.c"
+#include "welcome.c"
+#include "paddles.c"
+#include "ball.c"
 
 const int WINDOW_WIDTH = 750;
 const int WINDOW_HEIGHT = 750;
@@ -20,7 +12,7 @@ const int SECOND = 1000;
 const int SPEED = 300;
 const int BALL_SPEED = 165;
 
-int main(int argc, char *argv[]) {
+int main() {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         fprintf(stderr, "Could not init SDL: %s\n", SDL_GetError());
         exit(1);
@@ -34,7 +26,7 @@ int main(int argc, char *argv[]) {
         WINDOW_HEIGHT,
         0
     );
-    
+
     TTF_Init();
 
     srand(time(NULL));
