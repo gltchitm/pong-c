@@ -33,8 +33,8 @@ int main() {
 
     struct Paddles paddles = {
         WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
         0,
+        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
         0
     };
     struct Ball ball = {
