@@ -1,16 +1,16 @@
 #include <SDL2/SDL_ttf.h>
+#include <stdbool.h>
 
+#include "constants.c"
 #include "scoreboard.c"
 #include "welcome.c"
+#include "pressed_keys.c"
 #include "paddles.c"
 #include "ball.c"
 
-const int WINDOW_WIDTH = 750;
-const int WINDOW_HEIGHT = 750;
-const int CAP_PAD = 15;
-const int SECOND = 1000;
-const int SPEED = 300;
-const int BALL_SPEED = 165;
+int clamp(int value, int min, int max) {
+    return value < min ? min : value > max ? max : value;
+}
 
 int main() {
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -18,8 +18,8 @@ int main() {
         exit(1);
     }
 
-    SDL_Window *window = SDL_CreateWindow(
-        "Pong",
+    SDL_Window* window = SDL_CreateWindow(
+        "Pong C",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH,
@@ -31,204 +31,244 @@ int main() {
 
     srand(time(NULL));
 
-    const int paddle_bottom = WINDOW_HEIGHT - PADDLE_HEIGHT - CAP_PAD;
+    struct Paddles paddles = {
+        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
+        0,
+        0
+    };
+    struct Ball ball = {
+        WINDOW_WIDTH / 2 - BALL_RADIUS / 2,
+        WINDOW_HEIGHT / 2 - BALL_RADIUS / 2,
+        0,
+        0
+    };
+    struct PressedKeys pressed_keys = {
+        KEY_PRESS_STATE_INACTIVE,
+        KEY_PRESS_STATE_INACTIVE,
+        KEY_PRESS_STATE_INACTIVE,
+        KEY_PRESS_STATE_INACTIVE
+    };
 
-    struct Paddles paddles;
-    paddles.left_paddle = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2;
-    paddles.right_paddle = WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2;
-    paddles.left_paddle_proposed = 0;
-    paddles.right_paddle_proposed = 0;
+    SDL_Renderer* renderer = SDL_CreateRenderer(
+        window,
+        -1,
+        SDL_RENDERER_ACCELERATED
+    );
 
-    struct Ball ball;
-    ball.x = WINDOW_WIDTH / 2 - BALL_RADIUS / 2;
-    ball.y = WINDOW_HEIGHT / 2 - BALL_RADIUS / 2;
-
-    Uint32 render_flags = SDL_RENDERER_ACCELERATED;
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, render_flags);
-
-    int close = 0;
     int left_score = 0;
     int right_score = 0;
-    int game_active = 0;
+    int playing = false;
 
-    ball.x_speed = (rand() % 3) == 1 ? BALL_SPEED / 30 : -BALL_SPEED / 30;
-    ball.y_speed = (rand() % 3) == 1 ? BALL_SPEED / 30 : -BALL_SPEED / 30;
+    unsigned long long tick = 0;
 
-    while (!close) {
-        SDL_Event event;
-        if (game_active) {
-            paddles.left_paddle += paddles.left_paddle_proposed;
-            paddles.right_paddle += paddles.right_paddle_proposed;
-        }
+    randomize_ball_speed(&ball);
+
+    SDL_Event event;
+    while (true) {
+        struct timespec tick_start, tick_end;
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &tick_start);
+
+        SDL_RenderClear(renderer);
+
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_QUIT:
-                    close = 1;
-                    break;
-                case SDL_KEYDOWN:
-                    {
-                        if (!game_active) {
-                            if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                                game_active = 1;
-                            }
+                    goto exit;
+                case SDL_KEYDOWN: {
+                    #define KEYDOWN_HANDLER(key, inverse) \
+                        if (pressed_keys.inverse == KEY_PRESS_STATE_ACTIVE) { \
+                            pressed_keys.inverse = KEY_PRESS_STATE_BACKGROUND; \
+                        } \
+                        pressed_keys.key = KEY_PRESS_STATE_ACTIVE;
+
+                    switch (event.key.keysym.scancode) {
+                        case SDL_SCANCODE_SPACE:
+                            playing = true;
                             break;
-                        }
-                        const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
-                        if (event.key.keysym.scancode == SDL_SCANCODE_W) {
-                            paddles.left_paddle_proposed = -SPEED / 30;
-                        } else if (event.key.keysym.scancode == SDL_SCANCODE_S) {
-                            paddles.left_paddle_proposed = SPEED / 30;
-                        } else if (event.key.keysym.scancode == SDL_SCANCODE_UP) {
-                            paddles.right_paddle_proposed = -SPEED / 30;
-                        } else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN) {
-                            paddles.right_paddle_proposed = SPEED / 30;
-                        } else {
-                            if (paddles.left_paddle_proposed == 0) {
-                                if (event.key.keysym.scancode == SDL_SCANCODE_W) {
-                                    paddles.left_paddle_proposed = -SPEED / 30;
-                                    paddles.left_paddle += paddles.left_paddle_proposed;
-                                } else if (event.key.keysym.scancode == SDL_SCANCODE_S) {
-                                    paddles.left_paddle_proposed = SPEED / 30;
-                                    paddles.left_paddle += paddles.left_paddle_proposed;
-                                } else {
-                                    if (keyboard_state[SDL_SCANCODE_W]) {
-                                        paddles.left_paddle_proposed = -SPEED / 30;
-                                    } else if (keyboard_state[SDL_SCANCODE_S]) {
-                                        paddles.left_paddle_proposed = SPEED / 30;
-                                    }
-                                }
-                            }
-                            if (paddles.right_paddle_proposed == 0) {
-                                if (event.key.keysym.scancode == SDL_SCANCODE_UP) {
-                                    paddles.right_paddle_proposed = -SPEED / 30;
-                                    paddles.right_paddle += paddles.right_paddle_proposed;
-                                } else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN) {
-                                    paddles.right_paddle_proposed = SPEED / 30;
-                                    paddles.right_paddle += paddles.right_paddle_proposed;
-                                } else {
-                                    if (keyboard_state[SDL_SCANCODE_UP]) {
-                                        paddles.right_paddle_proposed = -SPEED / 30;
-                                    } else if (keyboard_state[SDL_SCANCODE_DOWN]) {
-                                        paddles.right_paddle_proposed = SPEED / 30;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case SDL_KEYUP:
-                    {
-                        if (!game_active) {
+                        case SDL_SCANCODE_W:
+                            KEYDOWN_HANDLER(w, s)
                             break;
-                        }
-                        const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
-                        switch (event.key.keysym.scancode) {
-                            case SDL_SCANCODE_W:
-                            case SDL_SCANCODE_S:
-                                if (!keyboard_state[SDL_SCANCODE_W] && !keyboard_state[SDL_SCANCODE_S]) {
-                                    paddles.left_paddle_proposed = 0;
-                                } else if (keyboard_state[SDL_SCANCODE_W]) {
-                                    paddles.left_paddle_proposed = -SPEED / 30;
-                                } else if (keyboard_state[SDL_SCANCODE_S]) {
-                                    paddles.left_paddle_proposed = SPEED / 30;
-                                }
-                                break;
-                            case SDL_SCANCODE_UP:
-                            case SDL_SCANCODE_DOWN:
-                                if (!keyboard_state[SDL_SCANCODE_UP] && !keyboard_state[SDL_SCANCODE_DOWN]) {
-                                    paddles.right_paddle_proposed = 0;
-                                } else if (keyboard_state[SDL_SCANCODE_UP]) {
-                                    paddles.right_paddle_proposed = -SPEED / 30;
-                                } else if (keyboard_state[SDL_SCANCODE_DOWN]) {
-                                    paddles.right_paddle_proposed = SPEED / 30;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
+                        case SDL_SCANCODE_S:
+                            KEYDOWN_HANDLER(s, w)
+                            break;
+                        case SDL_SCANCODE_UP:
+                            KEYDOWN_HANDLER(up, down)
+                            break;
+                        case SDL_SCANCODE_DOWN:
+                            KEYDOWN_HANDLER(down, up)
+                            break;
+                        default:
+                            break;
                     }
+
+                    #undef KEYDOWN_HANDLER
+
                     break;
+                }
+                case SDL_KEYUP: {
+                    if (!playing) {
+                        break;
+                    }
+
+                    #define KEYUP_HANDLER(key, inverse) \
+                        pressed_keys.key = KEY_PRESS_STATE_INACTIVE; \
+                        if (pressed_keys.inverse == KEY_PRESS_STATE_BACKGROUND) { \
+                            pressed_keys.inverse = KEY_PRESS_STATE_ACTIVE; \
+                        }
+
+                    switch (event.key.keysym.scancode) {
+                        case SDL_SCANCODE_W:
+                            KEYUP_HANDLER(w, s)
+                            break;
+                        case SDL_SCANCODE_S:
+                            KEYUP_HANDLER(s, w)
+                            break;
+                        case SDL_SCANCODE_UP:
+                            KEYUP_HANDLER(up, down)
+                            break;
+                        case SDL_SCANCODE_DOWN:
+                            KEYUP_HANDLER(down, up)
+                            break;
+                        default:
+                            break;
+                    }
+
+                    #undef KEYUP_HANDLER
+
+                    break;
+                }
                 default:
                     break;
             }
         }
-        if (paddles.left_paddle > paddle_bottom) {
-            paddles.left_paddle = paddle_bottom;
-            paddles.left_paddle_proposed = 0;
+
+        if (pressed_keys.w == KEY_PRESS_STATE_ACTIVE) {
+            paddles.left_paddle -= PADDLE_SPEED;
         }
-        if (paddles.left_paddle < CAP_PAD) {
-            paddles.left_paddle = CAP_PAD;
-            paddles.left_paddle_proposed = 0;
+        if (pressed_keys.s == KEY_PRESS_STATE_ACTIVE) {
+            paddles.left_paddle += PADDLE_SPEED;
         }
-        if (paddles.right_paddle > paddle_bottom) {
-            paddles.right_paddle = paddle_bottom;
-            paddles.right_paddle_proposed = 0;
+        if (pressed_keys.up == KEY_PRESS_STATE_ACTIVE) {
+            paddles.right_paddle -= PADDLE_SPEED;
         }
-        if (paddles.right_paddle < CAP_PAD) {
-            paddles.right_paddle = CAP_PAD;
-            paddles.right_paddle_proposed = 0;
+        if (pressed_keys.down == KEY_PRESS_STATE_ACTIVE) {
+            paddles.right_paddle += PADDLE_SPEED;
         }
-        if (game_active) {
-            ball.x += ball.x_speed;
-            ball.y += ball.y_speed;
+
+        #define CLAMP_PADDLE(left_or_right) \
+            paddles.left_or_right##_paddle = clamp( \
+                paddles.left_or_right##_paddle, \
+                PADDING, \
+                WINDOW_HEIGHT - PADDLE_HEIGHT - PADDING \
+            );
+
+        CLAMP_PADDLE(left)
+        CLAMP_PADDLE(right)
+
+        #undef CLAMP_PADDLE
+
+        if (playing && (++tick >= TICKS_UNTIL_START)) {
+            ball.x += ball.x_velocity;
+            ball.y += ball.y_velocity;
         }
-        if (ball.y < CAP_PAD) {
-            ball.y = CAP_PAD;
-            ball.y_speed = -ball.y_speed;
-        } else if (ball.y > WINDOW_HEIGHT - CAP_PAD) {
-            ball.y = WINDOW_HEIGHT - CAP_PAD;
-            ball.y_speed = -ball.y_speed;
-        }
+
         if (
-            PADDING_FROM_SIDE + PADDLE_WIDTH < ball.x + BALL_RADIUS &&
-            PADDING_FROM_SIDE + PADDLE_WIDTH * 2 > ball.x &&
-            paddles.left_paddle < ball.y + BALL_RADIUS &&
-            paddles.left_paddle + PADDLE_HEIGHT > ball.y
+            ball.x < PADDING + BALL_RADIUS ||
+            ball.x > WINDOW_WIDTH - PADDING - BALL_RADIUS
         ) {
-            if (ball.x_speed < 0) {
-                ball.x -= ball.x_speed;
-                ball.x_speed = -ball.x_speed;
-            }
-        }
-        if (
-            WINDOW_WIDTH - (PADDING_FROM_SIDE + PADDLE_WIDTH) < ball.x + BALL_RADIUS &&
-            (WINDOW_WIDTH - (PADDING_FROM_SIDE + PADDLE_WIDTH)) * 2 > ball.x &&
-            paddles.right_paddle < ball.y + BALL_RADIUS &&
-            paddles.right_paddle + PADDLE_HEIGHT > ball.y
-        ) {
-            if (ball.x_speed > 0) {
-                ball.x -= ball.x_speed;
-                ball.x_speed = -ball.x_speed;
-            }
-        }
-        if (
-            ball.x < 0 ||
-            ball.x > WINDOW_WIDTH
-        ) {
-            if (ball.x < 0) {
-                right_score += 1;
+            if (ball.x < PADDING + BALL_RADIUS) {
+                right_score = clamp(right_score + 1, 0, MAX_SCORE);
             } else {
-                left_score += 1;
+                left_score = clamp(left_score + 1, 0, MAX_SCORE);
             }
+
             ball.x = WINDOW_WIDTH / 2 - BALL_RADIUS / 2;
             ball.y = WINDOW_HEIGHT / 2 - BALL_RADIUS / 2;
-            ball.x_speed = (rand() % 3) == 1 ? BALL_SPEED / 30 : -BALL_SPEED / 30;
-            ball.y_speed = (rand() % 3) == 1 ? BALL_SPEED / 30 : -BALL_SPEED / 30;
+            tick = 0;
+
+            randomize_ball_speed(&ball);
+        } else {
+            if (ball.y < PADDING + BALL_RADIUS) {
+                ball.y = PADDING + BALL_RADIUS;
+                ball.y_velocity *= -1;
+            } else if (ball.y > WINDOW_HEIGHT - PADDING - BALL_RADIUS) {
+                ball.y = WINDOW_HEIGHT - PADDING - BALL_RADIUS;
+                ball.y_velocity *= -1;
+            }
+
+            if (
+                (ball.x < PADDING * 2 + PADDLE_WIDTH + BALL_RADIUS) &&
+                (ball.y + BALL_RADIUS > paddles.left_paddle) &&
+                (ball.y - BALL_RADIUS < paddles.left_paddle + PADDLE_HEIGHT)
+            ) {
+                ball.x = PADDING * 2 + PADDLE_WIDTH + BALL_RADIUS;
+                ball.x_velocity *= -1;
+            }
+
+            if (
+                (ball.x > WINDOW_WIDTH - PADDING * 2 - PADDLE_WIDTH - BALL_RADIUS) &&
+                (ball.y + BALL_RADIUS > paddles.right_paddle) &&
+                (ball.y - BALL_RADIUS < paddles.right_paddle + PADDLE_HEIGHT)
+            ) {
+                ball.x = WINDOW_WIDTH - PADDING * 2 - PADDLE_WIDTH - BALL_RADIUS;
+                ball.x_velocity *= -1;
+            }
         }
-        SDL_RenderClear(renderer);
-        if (game_active) {
-            draw_ball(&ball, renderer);
+
+        if (playing) {
+            draw_ball(ball, renderer);
             draw_scoreboard(left_score, right_score, WINDOW_WIDTH, renderer);
-            draw_paddles(&paddles, WINDOW_WIDTH, renderer);
+            draw_paddles(paddles, WINDOW_WIDTH, renderer);
         } else {
             draw_welcome_message(WINDOW_WIDTH, WINDOW_HEIGHT, renderer);
         }
+
+        int center = WINDOW_HEIGHT / 2 - BALL_RADIUS / 2;
+
+        #define TICK_IN_RANGE(from, to) \
+            ( \
+                tick >= from && \
+                tick <= to \
+            )
+
+        int ticks_until_start_sixth = TICKS_UNTIL_START / 6;
+
+        if (
+            TICK_IN_RANGE(ticks_until_start_sixth, ticks_until_start_sixth * 2) ||
+            TICK_IN_RANGE(ticks_until_start_sixth * 3, ticks_until_start_sixth * 4) ||
+            TICK_IN_RANGE(ticks_until_start_sixth * 5, ticks_until_start_sixth * 6)
+        ) {
+            draw_arrow(ball, renderer);
+        }
+
+        #undef TICK_IN_RANGE
+
+        if (playing) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            SDL_RenderDrawLine(renderer, center, 0, center, WINDOW_HEIGHT);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        }
+
         SDL_RenderPresent(renderer);
-        SDL_Delay(SECOND / 60);
+
+        clock_gettime(CLOCK_MONOTONIC_RAW, &tick_end);
+
+        long tick_seconds = tick_end.tv_sec - tick_start.tv_sec;
+        long tick_nanoseconds = tick_end.tv_nsec - tick_start.tv_nsec;
+        long tick_duration = tick_seconds * 1000 + tick_nanoseconds / 1000000;
+
+        long time_until_next_tick = TICK_DURATION - tick_duration;
+        if (time_until_next_tick < 0) {
+            continue;
+        }
+
+        SDL_Delay(time_until_next_tick);
     }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    return 0;
+    exit:
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
 }
