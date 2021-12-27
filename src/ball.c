@@ -57,7 +57,7 @@ void draw_arrow(struct Ball ball, SDL_Renderer* renderer) {
             center + BALL_RADIUS,
             center + BALL_RADIUS + ARROW_SIZE,
             center + BALL_RADIUS + ARROW_SIZE
-            );
+        );
         SDL_RenderDrawLine(
             renderer,
             center + BALL_RADIUS,
