@@ -111,10 +111,6 @@ int main() {
 
                     break;
                 case SDL_KEYUP:
-                    if (!playing) {
-                        break;
-                    }
-
                     #define KEYUP_HANDLER(key, inverse) \
                         pressed_keys.key = KEY_PRESS_STATE_INACTIVE; \
                         if (pressed_keys.inverse == KEY_PRESS_STATE_BACKGROUND) { \
@@ -146,81 +142,81 @@ int main() {
             }
         }
 
-        if (pressed_keys.w == KEY_PRESS_STATE_ACTIVE) {
-            paddles.left_paddle -= PADDLE_SPEED;
-        }
-        if (pressed_keys.s == KEY_PRESS_STATE_ACTIVE) {
-            paddles.left_paddle += PADDLE_SPEED;
-        }
-
-        if (pressed_keys.up == KEY_PRESS_STATE_ACTIVE) {
-            paddles.right_paddle -= PADDLE_SPEED;
-        }
-        if (pressed_keys.down == KEY_PRESS_STATE_ACTIVE) {
-            paddles.right_paddle += PADDLE_SPEED;
-        }
-
-        #define CLAMP_PADDLE(left_or_right) \
-            paddles.left_or_right##_paddle = clamp( \
-                paddles.left_or_right##_paddle, \
-                PADDING, \
-                WINDOW_HEIGHT - PADDLE_HEIGHT - PADDING \
-            )
-
-        CLAMP_PADDLE(left);
-        CLAMP_PADDLE(right);
-
-        #undef CLAMP_PADDLE
-
-        if (playing && (++tick >= TICKS_UNTIL_START)) {
-            ball.x += ball.x_velocity;
-            ball.y += ball.y_velocity;
-        }
-
-        if (
-            ball.x < PADDING + BALL_RADIUS ||
-            ball.x > WINDOW_WIDTH - PADDING - BALL_RADIUS
-        ) {
-            if (ball.x < PADDING + BALL_RADIUS) {
-                right_score = clamp(right_score + 1, 0, MAX_SCORE);
-            } else {
-                left_score = clamp(left_score + 1, 0, MAX_SCORE);
-            }
-
-            ball.x = WINDOW_WIDTH / 2 - BALL_RADIUS / 2;
-            ball.y = WINDOW_HEIGHT / 2 - BALL_RADIUS / 2;
-            tick = 0;
-
-            randomize_ball_speed(&ball);
-        } else {
-            if (ball.y < PADDING + BALL_RADIUS) {
-                ball.y = PADDING + BALL_RADIUS;
-                ball.y_velocity *= -1;
-            } else if (ball.y > WINDOW_HEIGHT - PADDING - BALL_RADIUS) {
-                ball.y = WINDOW_HEIGHT - PADDING - BALL_RADIUS;
-                ball.y_velocity *= -1;
-            }
-
-            if (
-                (ball.x < PADDING * 2 + PADDLE_WIDTH + BALL_RADIUS) &&
-                (ball.y + BALL_RADIUS > paddles.left_paddle) &&
-                (ball.y - BALL_RADIUS < paddles.left_paddle + PADDLE_HEIGHT)
-            ) {
-                ball.x = PADDING * 2 + PADDLE_WIDTH + BALL_RADIUS;
-                ball.x_velocity *= -1;
-            }
-
-            if (
-                (ball.x > WINDOW_WIDTH - PADDING * 2 - PADDLE_WIDTH - BALL_RADIUS) &&
-                (ball.y + BALL_RADIUS > paddles.right_paddle) &&
-                (ball.y - BALL_RADIUS < paddles.right_paddle + PADDLE_HEIGHT)
-            ) {
-                ball.x = WINDOW_WIDTH - PADDING * 2 - PADDLE_WIDTH - BALL_RADIUS;
-                ball.x_velocity *= -1;
-            }
-        }
-
         if (playing) {
+            if (pressed_keys.w == KEY_PRESS_STATE_ACTIVE) {
+                paddles.left_paddle -= PADDLE_SPEED;
+            }
+            if (pressed_keys.s == KEY_PRESS_STATE_ACTIVE) {
+                paddles.left_paddle += PADDLE_SPEED;
+            }
+
+            if (pressed_keys.up == KEY_PRESS_STATE_ACTIVE) {
+                paddles.right_paddle -= PADDLE_SPEED;
+            }
+            if (pressed_keys.down == KEY_PRESS_STATE_ACTIVE) {
+                paddles.right_paddle += PADDLE_SPEED;
+            }
+
+            #define CLAMP_PADDLE(left_or_right) \
+                paddles.left_or_right##_paddle = clamp( \
+                    paddles.left_or_right##_paddle, \
+                    PADDING, \
+                    WINDOW_HEIGHT - PADDLE_HEIGHT - PADDING \
+                )
+
+            CLAMP_PADDLE(left);
+            CLAMP_PADDLE(right);
+
+            #undef CLAMP_PADDLE
+
+            if (++tick >= TICKS_UNTIL_START) {
+                ball.x += ball.x_velocity;
+                ball.y += ball.y_velocity;
+            }
+
+            if (
+                ball.x < PADDING + BALL_RADIUS ||
+                ball.x > WINDOW_WIDTH - PADDING - BALL_RADIUS
+            ) {
+                if (ball.x < PADDING + BALL_RADIUS) {
+                    right_score = clamp(right_score + 1, 0, MAX_SCORE);
+                } else {
+                    left_score = clamp(left_score + 1, 0, MAX_SCORE);
+                }
+
+                ball.x = WINDOW_WIDTH / 2 - BALL_RADIUS / 2;
+                ball.y = WINDOW_HEIGHT / 2 - BALL_RADIUS / 2;
+                tick = 0;
+
+                randomize_ball_speed(&ball);
+            } else {
+                if (ball.y < PADDING + BALL_RADIUS) {
+                    ball.y = PADDING + BALL_RADIUS;
+                    ball.y_velocity *= -1;
+                } else if (ball.y > WINDOW_HEIGHT - PADDING - BALL_RADIUS) {
+                    ball.y = WINDOW_HEIGHT - PADDING - BALL_RADIUS;
+                    ball.y_velocity *= -1;
+                }
+
+                if (
+                    (ball.x < PADDING * 2 + PADDLE_WIDTH + BALL_RADIUS) &&
+                    (ball.y + BALL_RADIUS > paddles.left_paddle) &&
+                    (ball.y - BALL_RADIUS < paddles.left_paddle + PADDLE_HEIGHT)
+                ) {
+                    ball.x = PADDING * 2 + PADDLE_WIDTH + BALL_RADIUS;
+                    ball.x_velocity *= -1;
+                }
+
+                if (
+                    (ball.x > WINDOW_WIDTH - PADDING * 2 - PADDLE_WIDTH - BALL_RADIUS) &&
+                    (ball.y + BALL_RADIUS > paddles.right_paddle) &&
+                    (ball.y - BALL_RADIUS < paddles.right_paddle + PADDLE_HEIGHT)
+                ) {
+                    ball.x = WINDOW_WIDTH - PADDING * 2 - PADDLE_WIDTH - BALL_RADIUS;
+                    ball.x_velocity *= -1;
+                }
+            }
+
             draw_ball(ball, renderer);
             draw_scoreboard(left_score, right_score, WINDOW_WIDTH, renderer);
             draw_paddles(paddles, WINDOW_WIDTH, renderer);
