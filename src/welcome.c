@@ -1,6 +1,6 @@
-#pragma once
+#include "welcome.h"
 
-void draw_centered_message(int width, int font_size, int y, char* message, SDL_Renderer* renderer) {
+static void draw_centered_message(int width, int font_size, int y, char* message, SDL_Renderer* renderer) {
     TTF_Font* font = TTF_OpenFont("./vendor/font/font.ttf", font_size);
     SDL_Color color = {195, 195, 195, 0};
 
@@ -20,7 +20,7 @@ void draw_centered_message(int width, int font_size, int y, char* message, SDL_R
     TTF_CloseFont(font);
 }
 
-void draw_welcome_message(int width, int height, SDL_Renderer *renderer) {
+void draw_welcome_message(int width, int height, SDL_Renderer* renderer) {
     char* pong_name = "Pong C";
     char* press_space_to_start = "Press SPACE To Start!";
     draw_centered_message(width, 64, height / 3, pong_name, renderer);

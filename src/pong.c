@@ -1,11 +1,13 @@
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdbool.h>
 #include <time.h>
+#include <stdlib.h>
 
-#include "constants.c"
+#include "constants.h"
 #include "scoreboard.c"
 #include "welcome.c"
-#include "pressed_keys.c"
+#include "pressed_keys.h"
 #include "paddles.c"
 #include "ball.c"
 
@@ -44,6 +46,7 @@ int main() {
         0,
         0
     };
+
     struct PressedKeys pressed_keys = {
         KEY_PRESS_STATE_INACTIVE,
         KEY_PRESS_STATE_INACTIVE,
@@ -77,7 +80,7 @@ int main() {
             switch (event.type) {
                 case SDL_QUIT:
                     goto exit;
-                case SDL_KEYDOWN: {
+                case SDL_KEYDOWN:
                     #define KEYDOWN_HANDLER(key, inverse) \
                         if (pressed_keys.inverse == KEY_PRESS_STATE_ACTIVE) { \
                             pressed_keys.inverse = KEY_PRESS_STATE_BACKGROUND; \
@@ -107,8 +110,7 @@ int main() {
                     #undef KEYDOWN_HANDLER
 
                     break;
-                }
-                case SDL_KEYUP: {
+                case SDL_KEYUP:
                     if (!playing) {
                         break;
                     }
@@ -139,7 +141,6 @@ int main() {
                     #undef KEYUP_HANDLER
 
                     break;
-                }
                 default:
                     break;
             }
@@ -151,6 +152,7 @@ int main() {
         if (pressed_keys.s == KEY_PRESS_STATE_ACTIVE) {
             paddles.left_paddle += PADDLE_SPEED;
         }
+
         if (pressed_keys.up == KEY_PRESS_STATE_ACTIVE) {
             paddles.right_paddle -= PADDLE_SPEED;
         }
@@ -163,10 +165,10 @@ int main() {
                 paddles.left_or_right##_paddle, \
                 PADDING, \
                 WINDOW_HEIGHT - PADDLE_HEIGHT - PADDING \
-            );
+            )
 
-        CLAMP_PADDLE(left)
-        CLAMP_PADDLE(right)
+        CLAMP_PADDLE(left);
+        CLAMP_PADDLE(right);
 
         #undef CLAMP_PADDLE
 

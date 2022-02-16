@@ -1,6 +1,6 @@
-#pragma once
+#include "scoreboard.h"
 
-void draw_score(int current_score, int x, int y, SDL_Renderer* renderer) {
+static void draw_score(int current_score, int x, int y, SDL_Renderer* renderer) {
     TTF_Font *font = TTF_OpenFont("./vendor/font/font.ttf", 48);
     SDL_Color color = {255, 255, 255, 255};
 

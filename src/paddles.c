@@ -1,13 +1,6 @@
-#pragma once
+#include "paddles.h"
 
-struct Paddles {
-    int left_paddle;
-    int left_paddle_proposed;
-    int right_paddle;
-    int right_paddle_proposed;
-};
-
-void draw_paddle(int x, int y, SDL_Renderer* renderer) {
+static void draw_paddle(int x, int y, SDL_Renderer* renderer) {
     SDL_Rect rect = {x, y, PADDLE_WIDTH, PADDLE_HEIGHT};
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
