@@ -21,6 +21,8 @@ int main() {
         exit(1);
     }
 
+    SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
+
     SDL_Window* window = SDL_CreateWindow(
         "Pong C",
         SDL_WINDOWPOS_CENTERED,
