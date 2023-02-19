@@ -11,6 +11,31 @@
 #include "paddles.c"
 #include "ball.c"
 
+#define RESET_GAME() \
+    paddles = (struct Paddles) { \
+        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2, \
+        0, \
+        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2, \
+        0 \
+    }; \
+    ball = (struct Ball) { \
+        WINDOW_WIDTH / 2 - BALL_RADIUS / 2, \
+        WINDOW_HEIGHT / 2 - BALL_RADIUS / 2, \
+        0, \
+        0 \
+    }; \
+    pressed_keys = (struct PressedKeys) { \
+        KEY_PRESS_STATE_INACTIVE, \
+        KEY_PRESS_STATE_INACTIVE, \
+        KEY_PRESS_STATE_INACTIVE, \
+        KEY_PRESS_STATE_INACTIVE \
+    }; \
+    left_score = 0; \
+    right_score = 0; \
+    playing = false; \
+    tick = 0; \
+    randomize_ball_speed(&ball);
+
 int clamp(int value, int min, int max) {
     return value < min ? min : value > max ? max : value;
 }
@@ -36,39 +61,23 @@ int main() {
 
     srand(time(NULL));
 
-    struct Paddles paddles = {
-        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        0,
-        WINDOW_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-        0
-    };
-    struct Ball ball = {
-        WINDOW_WIDTH / 2 - BALL_RADIUS / 2,
-        WINDOW_HEIGHT / 2 - BALL_RADIUS / 2,
-        0,
-        0
-    };
+    struct Paddles paddles;
+    struct Ball ball;
+    struct PressedKeys pressed_keys;
 
-    struct PressedKeys pressed_keys = {
-        KEY_PRESS_STATE_INACTIVE,
-        KEY_PRESS_STATE_INACTIVE,
-        KEY_PRESS_STATE_INACTIVE,
-        KEY_PRESS_STATE_INACTIVE
-    };
+    int left_score;
+    int right_score;
+    int playing;
+
+    unsigned long long tick;
+
+    RESET_GAME();
 
     SDL_Renderer* renderer = SDL_CreateRenderer(
         window,
         -1,
         SDL_RENDERER_ACCELERATED
     );
-
-    int left_score = 0;
-    int right_score = 0;
-    int playing = false;
-
-    unsigned long long tick = 0;
-
-    randomize_ball_speed(&ball);
 
     SDL_Event event;
     while (true) {
@@ -104,6 +113,9 @@ int main() {
                             break;
                         case SDL_SCANCODE_DOWN:
                             KEYDOWN_HANDLER(down, up)
+                            break;
+                        case SDL_SCANCODE_ESCAPE:
+                            RESET_GAME();
                             break;
                         default:
                             break;
